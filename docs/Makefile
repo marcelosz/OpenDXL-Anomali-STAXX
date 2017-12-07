@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = OpenDXL-Anomali-STAXX
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      = ../../docs-OpenDXL-Anomali-STAXX
 
 # Put it first so that "make" without argument is like "make help".
 help:
