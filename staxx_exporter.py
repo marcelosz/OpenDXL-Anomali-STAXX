@@ -28,8 +28,8 @@ from dxlclient.client import DxlClient
 from dxlclient.client_config import DxlClientConfig
 from dxlclient.message import Event
 
-# DXL message root topic
-DXL_MSG_ROOT_TOPIC = "/staxx/observable"
+# Consts
+REQUEST_TIMEOUT = 10
 
 def create_arg_parser():
     """
@@ -49,9 +49,9 @@ def create_arg_parser():
     parser.add_argument("filter_query", help="Query used to filter desired observables (confidence, type, time window, ...).", metavar="FILTER_QUERY")
     parser.add_argument("-c", "--config_file", help="Configuration file.", default="/etc/opendxl-anomali-staxx/client.conf")
     parser.add_argument("-d", "--dryrun", help="Export observables from STAXX without generating DXL messages.", action='store_true', default=False)
-    parser.add_argument("-l", "--loglevel", help="Logging level (DEBUG, INFO or ERROR). If not set, defaults to ERROR.", default="INFO")
-    parser.add_argument("-p", "--pprint", help="Pretty print exported observables to STDOUT. Defaults to false.", action='store_true', default=False)
-    parser.add_argument("-t", "--time", help="Polling time (in seconds). Defaults to 60.", default=60)    
+    parser.add_argument("-l", "--loglevel", help="Logging level (DEBUG, INFO or ERROR).", default="INFO")
+    parser.add_argument("-p", "--pprint", help="Pretty print exported observables to STDOUT.", action='store_true', default=False)
+    parser.add_argument("-t", "--time", help="Polling time (in seconds).", default=60)    
 
     return parser
 
@@ -83,9 +83,9 @@ def get_staxx_token(address,port, user, pwd):
 
     try:
         logger.info("Connecting to STAXX server (token retrieval)...")
-        response = requests.post(url, content, headers=headers, verify=False)
-    except:
-        logger.error("Error connecting to STAXX server!")
+        response = requests.post(url, content, headers=headers, verify=False, timeout=REQUEST_TIMEOUT)
+    except Exception as e:
+        logger.error("Error connecting to STAXX server ({0})!".format(e.message))
         return None
 
     if response.status_code != 200:
@@ -100,7 +100,7 @@ def get_staxx_observables(address, port, token, query):
     Get observables.
 
     Returns:
-        A JSON object representing the observables.
+        A tuple (error, json), where 'error' equals True on failure, and 'json' contains the JSON response (None on failure).
     """
 
     # build the request 
@@ -109,17 +109,23 @@ def get_staxx_observables(address, port, token, query):
     content = json.dumps({"token": token, "query": query, "type": "json"}).encode("utf-8")
     try:
         logger.info("Connecting to STAXX server (observables exporting)...")
-        response = requests.post(url, content, headers=headers, verify=False)
+        response = requests.post(url, content, headers=headers, verify=False, timeout=REQUEST_TIMEOUT)
     except:
         logger.error("Error connecting to STAXX server...")
-        return None
+        return True, None
 
     if response.status_code != 200:
         logger.error("Could not export STAXX observables. Reason: {0}".format(response.reason))
-        return None
+        return True, None
     else:
         #get the data from the response
-        return response.json()
+        logger.debug("Response code is 200. Retrieving data...")
+        json_obj = response.json()
+        if len(json_obj) < 1:
+            logger.debug("JSON response is empty!")
+            return False, None
+        logger.debug("JSON response ok!")
+        return False, json_obj
 
 def publish_dxl_message(payload):
     """
@@ -176,37 +182,39 @@ def main(argv):
         #
         # export observables into JSON object
         # 
-        json_observables = get_staxx_observables(config['STAXX']['Address'],config['STAXX']['Port'],
+        req_error, json_observables = get_staxx_observables(config['STAXX']['Address'],config['STAXX']['Port'],
                                                  token, args.filter_query)
-        if not json_observables:
-            logger.error("No observables exported due to error. Sleeping until next cycle.")
+        if req_error:
+            logger.error("Failure exporting observables on this polling cycle. Sleeping until next.")
             time.sleep(args.time)
-            break
-        logger.info("{0} observable(s) exported from Anomali STAXX.".format(len(json_observables)))
-        if args.pprint: 
-            logger.info("Printing observables to STDOUT...")
-            print json.dumps(json_observables, indent=2,sort_keys=False)
-        if not args.dryrun:
-            #
-            # Publish the observables as events
-            #
-            try:
-                with DxlClient(dxl_config) as dxl_client:
-                    # Connect to DXL Broker
-                    logger.info("Connecting to DXL broker...")
-                    dxl_client.connect()
-                    logger.info("Publishing events...")
-                    dxl_event = Event(DXL_MSG_ROOT_TOPIC)
-                    dxl_event.payload = str("Whatever").encode()
-                    dxl_client.send_event(dxl_event)
-            except Exception as e:
-                logger.error("Could not initialize OpenDXL client ({0}).".format(e.message))
-                exit(1)
+            logger.info("New polling cycle...")
+            continue
+        if json_observables:
+            logger.info("{0} observable(s) exported from Anomali STAXX.".format(len(json_observables)))
+            if args.pprint: 
+                logger.info("Printing observables to STDOUT...")
+                print json.dumps(json_observables, indent=2,sort_keys=False)
+            if not args.dryrun:
+                #
+                # Publish the observables as events
+                #
+                try:
+                    with DxlClient(dxl_config) as dxl_client:
+                        # Connect to DXL Broker
+                        logger.info("Connecting to DXL broker...")
+                        dxl_client.connect()
+                        logger.info("Publishing events...")
+                        dxl_event = Event(DXL_MSG_ROOT_TOPIC)
+                        dxl_event.payload = str("Whatever").encode()
+                        dxl_client.send_event(dxl_event)
+                except Exception as e:
+                    logger.error("Could not initialize OpenDXL client ({0}).".format(e.message))
+                    exit(1)
         else:
-            # Do nothing...
-            logger.info("Done! (Dry run mode)")
-
+            logger.info("No observable exported from Anomali STAXX.")    
+        
         # wait for next cycle
+        logger.info("Sleeping until next polling cycle.")
         time.sleep(args.time)
         logger.info("New polling cycle...")
 

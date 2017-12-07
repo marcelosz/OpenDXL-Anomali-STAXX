@@ -12,7 +12,7 @@ fabric.
 
 How to use it
 -------------
-The client may be invoked by running the **staxx_observable_exporter.py** script (usage instructions
+The client may be invoked by running the **staxx_exporter.py** script (usage instructions
 below).
 
 .. argparse::
