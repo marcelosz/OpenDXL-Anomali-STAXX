@@ -8,11 +8,16 @@
 __author__ = "Marcelo Souza"
 __license__ = "GPL"
 
-import sys, argparse, textwrap
+import sys, logging, argparse, textwrap
 import requests, json, re, urllib3, time
 
-# Import common definitions and functions (logging, ...)
-from common import *
+# Enable logging, this will also direct built-in DXL log messages.
+# See - https://docs.python.org/2/howto/logging-cookbook.html
+log_formatter = logging.Formatter('%(asctime)s staxx-exporter (%(name)s) %(levelname)s: %(message)s')
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+logger = logging.getLogger()
+logger.addHandler(console_handler)
 
 # Config
 from configobj import ConfigObj, ConfigObjError
@@ -22,6 +27,9 @@ config = None
 from dxlclient.client import DxlClient
 from dxlclient.client_config import DxlClientConfig
 from dxlclient.message import Event
+
+# DXL message root topic
+DXL_MSG_ROOT_TOPIC = "/staxx/observable"
 
 def create_arg_parser():
     """
@@ -46,6 +54,20 @@ def create_arg_parser():
     parser.add_argument("-t", "--time", help="Polling time (in seconds). Defaults to 60.", default=60)    
 
     return parser
+
+def set_logging_level(lg, level):
+    """
+    Set the level of verbosity of a logger instance.
+    """
+    # Configure logging level
+    if level == 'DEBUG':
+        lg.setLevel(logging.DEBUG)
+    elif level == 'INFO':
+        lg.setLevel(logging.INFO)
+    elif level == 'WARNING':
+        lg.setLevel(logging.WARNING)   
+    else:
+        lg.setLevel(logging.ERROR)
 
 def get_staxx_token(address,port, user, pwd):
     """
@@ -116,9 +138,9 @@ def main(argv):
     args = arg_parser.parse_args()
 
     # set logging level
-    setLevel(logger, args.loglevel)
+    set_logging_level(logger, args.loglevel)
     # configure local logger for requests (Urllib3) and set its level
-    setLevel(logging.getLogger("urllib3"), args.loglevel)
+    set_logging_level(logging.getLogger("urllib3"), args.loglevel)
     # read cfg file
     try:
         config = ConfigObj(args.config_file, raise_errors=True, file_error=True)
