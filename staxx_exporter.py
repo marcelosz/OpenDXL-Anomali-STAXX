@@ -31,6 +31,15 @@ from dxlclient.message import Event
 # Consts
 REQUEST_TIMEOUT = 10
 
+def test_script():
+    """
+    Test function (for pytest)
+    """
+    dxl_config = None
+    dxl_config = DxlClientConfig.create_dxl_config_from_file('conf/dxl/sample_dxlclient.config')
+    if not dxl_config:
+	exit(1)
+
 def create_arg_parser():
     """
     Parses command line arguments.
@@ -55,12 +64,6 @@ def create_arg_parser():
     parser.add_argument("-t", "--time", help="Polling time (in seconds).", default=60)    
 
     return parser
-
-def test_script():
-    """
-    Test function (for pytest)
-    """
-    main("-h")
 
 def set_logging_level(lg, level):
     """
