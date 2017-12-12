@@ -1,7 +1,7 @@
 language: python
 
 script: 
-  PYTHONPATH=.:$PYTHONPATH py.test ./staxx_exporter.py -h
+  PYTHONPATH=.:$PYTHONPATH py.test staxx_exporter.py
 
 deploy:
   provider: pages
