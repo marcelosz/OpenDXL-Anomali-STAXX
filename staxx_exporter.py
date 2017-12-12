@@ -56,6 +56,12 @@ def create_arg_parser():
 
     return parser
 
+def test_script():
+    """
+    Test function (for pytest)
+    """
+    main("-h")
+
 def set_logging_level(lg, level):
     """
     Set the level of verbosity of a logger instance.
