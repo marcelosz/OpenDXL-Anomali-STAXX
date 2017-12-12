@@ -1,4 +1,4 @@
 language: python
 
 script: 
-  PYTHONPATH=.:$PYTHONPATH py.test ./staxx_exporter.py
+  PYTHONPATH=.:$PYTHONPATH py.test ./staxx_exporter.py -h
