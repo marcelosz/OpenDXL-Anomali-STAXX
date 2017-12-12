@@ -2,3 +2,10 @@ language: python
 
 script: 
   PYTHONPATH=.:$PYTHONPATH py.test ./staxx_exporter.py -h
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+  on:
+    branch: gh-pages  
