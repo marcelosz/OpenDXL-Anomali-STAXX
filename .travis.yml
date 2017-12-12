@@ -5,6 +5,7 @@ script:
 
 before_deploy:
 - pip install sphinx
+- pip install sphinx_rtd_theme
 - pip install sphinx-argparse
 - cd docs
 - ./build_docs.sh
