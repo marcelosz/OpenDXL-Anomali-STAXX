@@ -38,7 +38,7 @@ def test_script():
     dxl_config = None
     dxl_config = DxlClientConfig.create_dxl_config_from_file('conf/dxl/sample_dxlclient.config')
     if not dxl_config:
-	exit(1)
+	    exit(1)
 
 def create_arg_parser():
     """
