@@ -4,6 +4,8 @@ script:
   PYTHONPATH=.:$PYTHONPATH py.test staxx_exporter.py
 
 before_deploy:
+- pip install sphinx
+- pip install sphinx-argparse
 - cd docs
 - ./build_docs.sh
   
