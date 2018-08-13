@@ -1,0 +1,1 @@
+./staxx_exporter.py -c conf/client.conf -l DEBUG -d -p -t 60 "confidence>50 and date_last>-1m and itype=ddos_ip"

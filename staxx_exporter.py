@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """staxx_exporter.py - 
   Main OpenDXL-Anomali-STAXX client script. 
-  Connects to Anomali STAXX and McAFee DXL messaging bus, exporting observables 
+  Connects to Anomali STAXX and McAfee DXL messaging bus, exporting observables 
   from one into the other as messages. """
 
 __author__ = "Marcelo Souza"
@@ -254,7 +254,7 @@ def main(argv):
             exit(0)
         else:
             logger.info("Sleeping until next polling cycle...\n")
-            time.sleep(args.time)
+            time.sleep(float(args.time))
             logger.info("New polling cycle.")
 
 if __name__ == "__main__":
