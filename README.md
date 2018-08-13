@@ -1,6 +1,6 @@
 # OpenDXL-Anomali-STAXX
 
-OpenDXL-Anomali-STAXX is a Python client that exports observables (IOCs) from [Anomali STAXX] (https://www.anomali.com/platform/staxx) and publishes them into a McAfee DXL messaging fabric.
+OpenDXL-Anomali-STAXX is a Python client that exports observables (IOCs) from [Anomali STAXX](https://www.anomali.com/platform/staxx) and publishes them into a McAfee DXL messaging fabric.
 
 ## Getting Started
 
